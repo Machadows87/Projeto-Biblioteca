@@ -1,0 +1,61 @@
+@model Biblioteca.Models.Usuario
+@{
+    ViewData["Title"] = "Meu Perfil";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow border-0" style="background-color: #1e1e1e; color: white;">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">👤 Editar Meu Perfil</h4>
+                </div>
+                <div class="card-body">
+                    <form id="formMinhaConta">
+                        <input type="hidden" id="userId" value="@Model.Id" />
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-info">Nome Completo</label>
+                            <input type="text" id="nome" class="form-control" value="@Model.Nome" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-info">E-mail</label>
+                            <input type="email" id="email" class="form-control" value="@Model.Email" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-warning">Nova Senha (deixe em branco para não alterar)</label>
+                            <input type="password" id="senha" class="form-control" placeholder="******">
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="button" onclick="salvarPerfil()" class="btn btn-success">Atualizar Dados</button>
+                            <a href="/Home" class="btn btn-outline-light">Voltar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function salvarPerfil() {
+        let dados = {
+            id: $('#userId').val(),
+            nome: $('#nome').val(),
+            email: $('#email').val(),
+            senha: $('#senha').val()
+        };
+
+        $.post('/Login/AtualizarPerfil', dados, function(res) {
+            if(res.sucesso) {
+                alert("Dados atualizados! Você precisará logar novamente para ver as mudanças no nome.");
+                window.location.href = '/Login/Sair';
+            } else {
+                alert("Erro: " + res.mensagem);
+            }
+        });
+    }
+</script>

@@ -1,0 +1,151 @@
+@{
+    ViewData["Title"] = "Gerenciar Usuários";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Usuários do Sistema</h2>
+        <button class="btn btn-dark shadow" onclick="novoUsuario()">+ Novo Usuário</button>
+    </div>
+
+    <table class="table table-hover table-bordered shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>Perfil</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="corpoTabelaUsuarios"></tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="modalUsuario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cadastro de Usuário</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formUsuario">
+                    <input type="hidden" id="userId">
+                    <div class="mb-3">
+                        <label class="form-label">Nome Completo</label>
+                        <input type="text" id="nome" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="email" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Senha</label>
+                        <input type="password" id="senha" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Perfil de Acesso</label>
+                        <select id="perfil" class="form-select">
+                            <option value="Leitor">Leitor (Apenas consulta)</option>
+                            <option value="Admin">Administrador (Acesso Total)</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarUsuario()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    $(document).ready(function () { 
+        listarUsuarios(); 
+    });
+
+    function listarUsuarios() {
+        $.get('/Usuario/Listar', function (data) {
+            let html = '';
+            // Pegamos o email do admin logado para evitar que ele se exclua
+            const emailLogado = "@User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value";
+
+            if (data.length === 0) {
+                html = '<tr><td colspan="4" class="text-center">Nenhum usuário cadastrado.</td></tr>';
+            } else {
+                data.forEach(u => {
+                    let nome = u.nome || u.Nome;
+                    let email = u.email || u.Email;
+                    let perfil = u.perfil || u.Perfil;
+                    let id = u.id || u.Id;
+
+                    let badge = perfil === "Admin" ? "bg-danger" : "bg-info text-dark";
+                    
+                    // Se for o próprio usuário logado, desabilita o botão de excluir
+                    let btnExcluir = email === emailLogado 
+                        ? `<button class="btn btn-sm btn-secondary" disabled title="Você não pode se excluir">Excluir</button>`
+                        : `<button class="btn btn-sm btn-danger" onclick="excluir(${id})">Excluir</button>`;
+
+                    html += `<tr>
+                        <td>${nome}</td>
+                        <td>${email}</td>
+                        <td><span class="badge ${badge}">${perfil}</span></td>
+                        <td>${btnExcluir}</td>
+                    </tr>`;
+                });
+            }
+            $('#corpoTabelaUsuarios').html(html);
+        });
+    }
+
+    function novoUsuario() {
+        $('#formUsuario')[0].reset();
+        $('#userId').val(0);
+        $('#modalUsuario').modal('show');
+    }
+
+    function salvarUsuario() {
+        let dados = {
+            Id: $('#userId').val() || 0,
+            Nome: $('#nome').val(),
+            Email: $('#email').val(),
+            Senha: $('#senha').val(),
+            Perfil: $('#perfil').val()
+        };
+
+        if (!dados.Nome || !dados.Email || !dados.Senha) {
+            alert("Por favor, preencha todos os campos!");
+            return;
+        }
+
+        $.post('/Usuario/Salvar', dados, function (res) {
+            if (res.sucesso) {
+                alert("Usuário salvo com sucesso!");
+                $('#modalUsuario').modal('hide');
+                listarUsuarios();
+            } else {
+                alert("Erro ao salvar: " + res.mensagem);
+            }
+        }).fail(function() {
+            alert("Erro crítico ao salvar.");
+        });
+    }
+
+    function excluir(id) {
+        if(confirm("Deseja realmente remover este usuário?")) {
+            $.post('/Usuario/Excluir', { id: id }, function (res) {
+                if(res.sucesso) {
+                    alert("Usuário removido com sucesso!");
+                    listarUsuarios();
+                } else {
+                    // MOSTRA O ERRO DE PENDÊNCIA (LÓGICA B)
+                    alert("Atenção: " + res.mensagem);
+                }
+            }).fail(function() {
+                alert("Erro ao processar a exclusão no servidor.");
+            });
+        }
+    }
+</script>

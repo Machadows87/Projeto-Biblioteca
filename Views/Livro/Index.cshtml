@@ -1,0 +1,143 @@
+@{
+    ViewData["Title"] = "Gestão de Livros";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>📚 Acervo de Livros</h2>
+        
+        @* SÓ ADMIN PODE VER O BOTÃO DE NOVO LIVRO *@
+        @if (User.IsInRole("Admin"))
+        {
+            <button class="btn btn-success shadow" onclick="abrirModalNovo()">+ Novo Livro</button>
+        }
+    </div>
+
+    <table class="table table-hover table-bordered shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>ISBN</th>
+                <th>Título</th>
+                <th>Autor</th>
+                <th>Ano</th>
+                <th>Status</th>
+                @if (User.IsInRole("Admin"))
+                {
+                    <th>Ações</th>
+                }
+            </tr>
+        </thead>
+        <tbody id="corpoTabelaLivros"></tbody>
+    </table>
+</div>
+
+@* MODAL DE CADASTRO / EDIÇÃO *@
+<div class="modal fade" id="modalLivro" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title">Cadastro de Livro</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formLivro">
+                    <input type="hidden" id="livroId" value="0">
+                    <div class="mb-3">
+                        <label class="form-label text-info">ISBN</label>
+                        <input type="text" id="isbn" class="form-control" placeholder="978-0-00-000000-0">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-info">Título</label>
+                        <input type="text" id="titulo" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-info">Autor</label>
+                        <input type="text" id="autor" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-info">Ano de Publicação</label>
+                        <input type="number" id="ano" class="form-control" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarLivro()">Salvar Livro</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    $(document).ready(function () {
+        listarLivros();
+    });
+
+    function listarLivros() {
+        $.get('/Livro/Listar', function (livros) {
+            let html = '';
+            const isAdmin = @(User.IsInRole("Admin") ? "true" : "false");
+
+            livros.forEach(l => {
+                let statusBadge = l.disponivel 
+                    ? '<span class="badge bg-success">Disponível</span>' 
+                    : '<span class="badge bg-danger">Emprestado</span>';
+
+                html += `<tr>
+                    <td>${l.isbn || l.ISBN || '-'}</td>
+                    <td>${l.titulo}</td>
+                    <td>${l.autor}</td>
+                    <td>${l.ano}</td>
+                    <td>${statusBadge}</td>
+                    ${isAdmin ? `<td>
+                        <button class="btn btn-danger btn-sm shadow" onclick="excluir(${l.id})">Excluir</button>
+                    </td>` : ''}
+                </tr>`;
+            });
+            $('#corpoTabelaLivros').html(html || '<tr><td colspan="${isAdmin ? 6 : 5}" class="text-center text-muted">Nenhum livro encontrado.</td></tr>');
+        });
+    }
+
+    function abrirModalNovo() {
+        $('#formLivro')[0].reset();
+        $('#livroId').val(0);
+        $('#modalLivro').modal('show');
+    }
+
+    function salvarLivro() {
+        let dados = {
+            Id: $('#livroId').val(),
+            ISBN: $('#isbn').val(),
+            Titulo: $('#titulo').val(),
+            Autor: $('#autor').val(),
+            Ano: $('#ano').val()
+        };
+
+        if (!dados.Titulo || !dados.Autor) {
+            alert("Preencha o título e o autor!");
+            return;
+        }
+
+        $.post('/Livro/Salvar', dados, function (res) {
+            if (res.sucesso) {
+                $('#modalLivro').modal('hide');
+                listarLivros();
+            } else {
+                alert("Erro: " + res.mensagem);
+            }
+        });
+    }
+
+    function excluir(id) {
+        if (confirm("Deseja realmente excluir este livro?")) {
+            $.post('/Livro/Excluir', { id: id }, function (res) {
+                if (res.sucesso) {
+                    listarLivros();
+                } else {
+                    alert(res.mensagem);
+                }
+            });
+        }
+    }
+</script>

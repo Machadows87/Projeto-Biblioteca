@@ -1,0 +1,31 @@
+﻿@{
+    ViewData["Title"] = "Sistema Biblioteca";
+}
+
+<div class="container mt-5">
+    <div class="p-5 rounded" style="background-color: #1e1e1e; border: 1px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+        
+        <h1 class="display-4 text-white">
+            Sistema Biblioteca
+        </h1>
+
+        <p class="lead text-secondary">
+            Gestão do acervo e controle de usuários.
+        </p>
+
+        <hr style="border-color: #444;">
+
+        <div class="mt-4">
+            <a asp-controller="Livro" asp-action="Index" class="btn btn-primary btn-lg px-4 shadow">Livros</a>
+            
+            @* TRAVA DE SEGURANÇA: O botão verde só aparece para Administradores *@
+            @if (User.IsInRole("Admin"))
+            {
+                <a asp-controller="Usuario" asp-action="Index" class="btn btn-success btn-lg ms-2 px-4 shadow">Usuários</a>
+            }
+
+            <a asp-controller="Emprestimo" asp-action="Index" class="btn btn-info btn-lg ms-2 px-4 shadow text-white">Empréstimos</a>
+        </div>
+
+    </div>
+</div>

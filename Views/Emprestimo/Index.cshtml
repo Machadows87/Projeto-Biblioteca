@@ -1,0 +1,121 @@
+@{
+    ViewData["Title"] = "Empréstimos";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>📜 Controle de Empréstimos</h2>
+        <button class="btn btn-primary shadow" onclick="abrirModal()">
+            @(User.IsInRole("Admin") ? "+ Novo Empréstimo" : "📖 Pegar um Livro")
+        </button>
+    </div>
+
+    <table class="table table-hover table-bordered shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Livro</th>
+                @if (User.IsInRole("Admin")) { <th>Usuário</th> }
+                <th>Data</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="corpoTabelaEmprestimos"></tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="modalEmprestimo" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title">@(User.IsInRole("Admin") ? "Registrar Empréstimo" : "Solicitar meu Livro")</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEmprestimo">
+                    <div class="mb-3">
+                        <label class="form-label text-info">Escolha o Livro Disponível</label>
+                        <select id="livroId" class="form-select" required></select>
+                    </div>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <div class="mb-3">
+                            <label class="form-label text-warning">Selecionar Usuário:</label>
+                            <select id="usuarioId" class="form-select"></select>
+                        </div>
+                    }
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="salvar()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    $(document).ready(function () {
+        listar();
+    });
+
+    function listar() {
+        $.get('/Emprestimo/Listar', function (data) {
+            let html = '';
+            const isAdmin = @(User.IsInRole("Admin") ? "true" : "false");
+
+            data.forEach(e => {
+                let badge = e.status === "Pendente" ? "bg-warning text-dark" : "bg-success";
+                
+                // Botão de devolver visível para todos se estiver pendente
+                let acao = e.status === "Pendente" 
+                    ? `<button class="btn btn-sm btn-info" onclick="devolver(${e.id})">Devolver</button>` 
+                    : '<span class="text-success fw-bold">✔ Finalizado</span>';
+
+                html += `<tr>
+                    <td>${e.livro}</td>
+                    ${isAdmin ? `<td>${e.usuario}</td>` : ''}
+                    <td>${e.dataEmprestimo}</td>
+                    <td><span class="badge ${badge}">${e.status}</span></td>
+                    <td>${acao}</td>
+                </tr>`;
+            });
+            
+            let colSpan = isAdmin ? 5 : 4;
+            $('#corpoTabelaEmprestimos').html(html || `<tr><td colspan="${colSpan}" class="text-center text-muted">Nenhum registro.</td></tr>`);
+        });
+    }
+
+    function abrirModal() {
+        $.get('/Emprestimo/ObterDadosParaEmprestimo', function (res) {
+            if(res.livros.length === 0){
+                alert("Não há livros disponíveis.");
+                return;
+            }
+            $('#livroId').html(res.livros.map(l => `<option value="${l.id}">${l.titulo}</option>`).join(''));
+            if ($('#usuarioId').length > 0) {
+                $('#usuarioId').html(res.usuarios.map(u => `<option value="${u.id}">${u.nome}</option>`).join(''));
+            }
+            $('#modalEmprestimo').modal('show');
+        });
+    }
+
+    function salvar() {
+        let dados = { LivroId: $('#livroId').val(), UsuarioId: $('#usuarioId').val() };
+        $.post('/Emprestimo/Salvar', dados, function (res) {
+            if (res.sucesso) { $('#modalEmprestimo').modal('hide'); listar(); }
+            else alert(res.mensagem);
+        });
+    }
+
+    function devolver(id) {
+        if (confirm("Confirmar a devolução deste livro?")) {
+            $.post('/Emprestimo/Devolver', { id: id }, function (res) {
+                if (res.sucesso) listar();
+                else alert(res.mensagem);
+            });
+        }
+    }
+</script>
