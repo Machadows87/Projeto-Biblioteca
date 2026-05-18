@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Admin\\Biblioteca\\Biblioteca.csproj": {}
+    "C:\\Users\\Admin\\Downloads\\Projeto-Biblioteca\\Biblioteca.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Admin\\Biblioteca\\Biblioteca.csproj": {
+    "C:\\Users\\Admin\\Downloads\\Projeto-Biblioteca\\Biblioteca.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Admin\\Biblioteca\\Biblioteca.csproj",
+        "projectUniqueName": "C:\\Users\\Admin\\Downloads\\Projeto-Biblioteca\\Biblioteca.csproj",
         "projectName": "Biblioteca",
-        "projectPath": "C:\\Users\\Admin\\Biblioteca\\Biblioteca.csproj",
+        "projectPath": "C:\\Users\\Admin\\Downloads\\Projeto-Biblioteca\\Biblioteca.csproj",
         "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Admin\\Biblioteca\\obj\\",
+        "outputPath": "C:\\Users\\Admin\\Downloads\\Projeto-Biblioteca\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -46,6 +46,10 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[8.0.11, )"
+            },
             "Microsoft.EntityFrameworkCore.Sqlite": {
               "target": "Package",
               "version": "[8.0.8, )"
