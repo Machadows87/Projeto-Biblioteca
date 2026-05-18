@@ -8,8 +8,7 @@ builder.Services.AddControllersWithViews();
 
 // Banco de Dados
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=biblioteca.db"));
-
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 // 2. Configuração de Autenticação (Cookie)
 builder.Services.AddAuthentication("CookieAuth")
     .AddCookie("CookieAuth", config =>
