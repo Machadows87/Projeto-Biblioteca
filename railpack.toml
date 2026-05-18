@@ -1,2 +1,2 @@
 [build]
-cmd = "dotnet publish Biblioteca.csproj -c Release -o out"
+cmd = "dotnet publish Biblioteca.csproj -c Release -o out"git status
