@@ -33,7 +33,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection(); // Segurança extra para HTTPS
+//app.UseHttpsRedirection(); // Segurança extra para HTTPS
 app.UseStaticFiles();
 
 app.UseRouting();
